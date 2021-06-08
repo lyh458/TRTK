@@ -122,7 +122,8 @@ namespace TRTK
         Matrix A_tilda = P * A;  // reverse rows of A
         HouseholderQR<Matrix> qr(A_tilda.transpose());
         Matrix Q_tilda = qr.householderQ();
-        Matrix R_tilda = qr.matrixQR().triangularView<Upper>();
+        // Matrix R_tilda = qr.matrixQR().triangularView<Upper>();
+        Matrix R_tilda = qr.matrixQR().template triangularView<Upper>();
         DiagonalMatrix<T, Dynamic, Dynamic> D(n);
         for (int i = 0; i < n; ++i) D.diagonal()(i) = R_tilda(i, i) >= 0 ? 1 : -1;
         Q_tilda = Q_tilda * D;
@@ -634,19 +635,19 @@ namespace TRTK
         // Decompose A and form T_proj and T_pose from U and R according to (5).
 
         MatrixXT U, R;
-        tie(U, R) = computeRQDecomposition<T>(A.block<3, 3>(0, 0));
+        tie(U, R) = computeRQDecomposition<T>(A.template block<3, 3>(0, 0));
 
         // T_proj
-        T_proj.block<3, 3>(0, 0) = U / U(2, 2);
+        T_proj.template block<3, 3>(0, 0) = U / U(2, 2);
         T_proj(0, 3) = 0;
         T_proj(1, 3) = 0;
         T_proj(2, 3) = 0;
 
         // T_pose
-        MatrixXT Ut = A.block<3, 1>(0, 3);
+        MatrixXT Ut = A.template block<3, 1>(0, 3);
         MatrixXT t = U.inverse() * Ut;
-        T_pose.block<3, 3>(0, 0) = R;
-        T_pose.block<3, 1>(0, 3) = t;
+        T_pose.template block<3, 3>(0, 0) = R;
+        T_pose.template block<3, 1>(0, 3) = t;
 
         // Compute the root-mean square error.
 
@@ -761,7 +762,7 @@ namespace TRTK
     template <class T>
     void PinholeCameraModel<T>::setExtrinsicParameters(const Matrix4T & parameters)
     {
-        auto & R = parameters.block<3, 3>(0, 0);
+        auto & R = parameters.template block<3, 3>(0, 0);
         const bool ORIENTATION_MATRIX_IS_ORTHOGONAL = ((R * R.transpose()) - Matrix3T::Identity()).norm() < 1e-7;
         assert(ORIENTATION_MATRIX_IS_ORTHOGONAL);
 
